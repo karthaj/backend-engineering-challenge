@@ -3,6 +3,7 @@ package internals
 import (
 	"backend-engineering-challenge/internals/config"
 	"backend-engineering-challenge/internals/database"
+	"backend-engineering-challenge/internals/domain"
 	"backend-engineering-challenge/internals/domain/log"
 	"backend-engineering-challenge/internals/transport/http"
 	"context"
@@ -22,13 +23,13 @@ func Init() {
 
 	// Load Config
 	config.InitConfig()
-	parentCtx := context.WithValue(context.Background(), "uuid", uuid.New())
+	parentCtx := context.WithValue(context.Background(), domain.CorrelationIdContextKey, uuid.New())
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
 	database.Init(ctx)
 
-	err := database.DbCon.LoadDB()
+	err := database.LoadDB(ctx)
 	if err != nil {
 		log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixInit, "database.DbCon.LoadDB()"), "error", err)
 	}

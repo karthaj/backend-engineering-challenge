@@ -23,7 +23,9 @@ func Init(ctx context.Context) {
 
 	r.Handle(`/v1.0/ping`, methodControl(http.MethodGet, server.Ping()))
 
-	r.Handle(`/v1.0/ping`, methodControl(http.MethodGet, server.Ping()))
+	r.Handle(`/v1.0/account/transaction`, methodControl(http.MethodPost, server.DoTransaction()))
+	r.Handle(`/v1.0/account/get/id/{id}`, methodControl(http.MethodGet, server.GetAccountDetailsByID()))
+	r.Handle(`/v1.0/account/get/name/{name}`, methodControl(http.MethodGet, server.GetAccountDetailsByName()))
 
 	StartServer(ctx, port, r)
 

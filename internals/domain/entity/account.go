@@ -13,9 +13,3 @@ type AccountEntity struct {
 	Name    string  `json:"name"`
 	Balance float64 `json:"balance"`
 }
-
-type TransactionRequest struct {
-	ID              string
-	Amount          float64
-	TransactionType string
-}

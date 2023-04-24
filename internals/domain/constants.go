@@ -1,7 +1,7 @@
 package domain
 
 const (
-	CorrelationIdContextKey = "CorrelationId"
+	CorrelationIdContextKey = "correlation-id"
 
 	// TrxDebit Account transactions type - Debit
 	TrxDebit = "DR"

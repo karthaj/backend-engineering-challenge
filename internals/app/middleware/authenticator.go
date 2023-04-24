@@ -1,30 +1,23 @@
 package middleware
 
 import (
+	errors "backend-engineering-challenge/internals/app/error"
 	"context"
-	httpTransporter "github.com/go-kit/kit/transport/http"
-	"net/http"
-	"strings"
+	"github.com/go-kit/kit/endpoint"
 )
 
-const bearer = "bearer"
+const JWTTokenContextKey = "JWTToken"
 
-func DecodeHttp() httpTransporter.RequestFunc {
-	return func(ctx context.Context, req *http.Request) context.Context {
-		token, ok := extractTokenFromAuthHeader(req.Header.Get("Authorization"))
-		if !ok {
-			return ctx
+func NewParser() endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			_, ok := ctx.Value(JWTTokenContextKey).(string)
+			if !ok {
+				return nil, errors.NewAuthenticationError(`Need a token`, errors.ErrAuthNoToken)
+			}
+
+			// Validate the token with the required payload
+			return next(ctx, request)
 		}
-		return context.WithValue(ctx, "JWT-TOKEN", token)
 	}
-}
-
-func extractTokenFromAuthHeader(val string) (token string, ok bool) {
-	authHeaderParts := strings.Split(val, " ")
-
-	if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != bearer {
-		return "", false
-	}
-
-	return authHeaderParts[1], true
 }

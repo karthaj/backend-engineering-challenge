@@ -7,15 +7,15 @@ import (
 	"fmt"
 )
 
-const usecasePrefixPing = "internals.app.usecase.ping"
+const usecasePrefixPing = "backend-engineering-challenge.internals.app.usecase.ping"
 
-type PingService interface {
+type PingServiceInterface interface {
 	Pinging(ctx context.Context) (string, error)
 }
 
-type PingServiceStr struct{}
+type PingService struct{}
 
-func (r PingServiceStr) Pinging(ctx context.Context) (string, error) {
+func (r PingService) Pinging(ctx context.Context) (string, error) {
 
 	uc := usecase.NewPingUsecase()
 

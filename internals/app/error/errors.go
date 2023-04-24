@@ -2,7 +2,6 @@ package errors
 
 import (
 	"fmt"
-	"reflect"
 )
 
 type DomainError struct {
@@ -36,10 +35,12 @@ func (e ApplicationError) Error() string {
 }
 
 type ValidationError struct {
-	Message string      `json:"message"`
-	Fields  interface{} `json:"fields"`
-	Code    int         `json:"code"`
-	Trace   string      `json:"trace"`
+	Message          string      `json:"message"`
+	CorrelationId    string      `json:"correlationId"`
+	Fields           interface{} `json:"fields"`
+	DeveloperMessage string      `json:"developerMessage"`
+	Code             int         `json:"code"`
+	Trace            string      `json:"trace"`
 }
 
 type GeneralError struct {
@@ -59,7 +60,6 @@ func (e GeneralError) Error() string {
 }
 
 func NewAuthenticationError(messages string, code int) AuthenticationError {
-
 	return AuthenticationError{
 		Message: messages,
 		Code:    code,
@@ -84,24 +84,12 @@ func NewApplicationError(correlationId string, message string, developerMessage 
 	}
 }
 
-func NewValidationError(correlationId string, message string, developerMessage string, fields map[string]string, code int) GeneralError {
-	return GeneralError{
+func NewValidationError(correlationId string, message string, developerMessage string, fields map[string]string, code int) ValidationError {
+	return ValidationError{
 		Code:             code,
 		CorrelationId:    correlationId,
 		Message:          message,
 		DeveloperMessage: developerMessage,
 		Fields:           fields,
 	}
-}
-
-func IsValidationError(err error) bool {
-	return reflect.TypeOf(err) == reflect.TypeOf(GeneralError{})
-}
-
-func IsApplicationError(err error) bool {
-	return reflect.TypeOf(err) == reflect.TypeOf(GeneralError{})
-}
-
-func IsDomainError(err error) bool {
-	return reflect.TypeOf(err) == reflect.TypeOf(GeneralError{})
 }

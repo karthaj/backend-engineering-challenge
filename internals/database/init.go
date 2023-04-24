@@ -23,6 +23,8 @@ type BadgerDB struct {
 
 var DbCon *BadgerDB
 
+var Database *badger.DB
+
 const (
 	// Default BadgerDB discardRatio. It represents the discard ratio for the
 	// BadgerDB GC.
@@ -50,6 +52,8 @@ func Init(ctx context.Context) {
 		log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "badger.Open(opts)"), err)
 	}
 
+	Database = badgerDB
+
 	bdb := &BadgerDB{
 		db:     badgerDB,
 		logger: log.NativeLog,
@@ -57,26 +61,54 @@ func Init(ctx context.Context) {
 	}
 	bdb.ctx, bdb.cancelFunc = context.WithCancel(ctx)
 
-	go bdb.runGC()
+	go bdb.runGC(ctx)
 
 	DbCon = bdb
 
 }
 
-func (r *BadgerDB) LoadDB() error {
+func LoadDB(ctx context.Context) error {
 
-	err := r.db.DropAll()
+	err := Database.DropAll()
 	if err != nil {
-		log.ErrorContext(r.ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "r.db.DropAll"), "Unable to unmarshal data", fmt.Sprintf("%+v", err.Error()))
+		log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "r.db.DropAll"), "Unable to unmarshal data", fmt.Sprintf("%+v", err.Error()))
 		return err
 	}
 
 	// Unmarshal JSON data into Account slice
 	var accounts []entity.Account
-	err = json.Unmarshal(loadData(r.ctx), &accounts)
+	err = json.Unmarshal(loadData(ctx), &accounts)
 	if err != nil {
-		log.ErrorContext(r.ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "json.Unmarshal(loadData(r.ctx), &accounts)"), "Unable to unmarshal data", fmt.Sprintf("%+v", err.Error()))
+		log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "json.Unmarshal(loadData(ctx), &accounts)"), "Unable to unmarshal data", fmt.Sprintf("%+v", err.Error()))
 	}
+
+	txn := Database.NewWriteBatch()
+	defer txn.Cancel()
+
+	// Add each key-value pair to the batch
+	for _, d := range accounts {
+		key := []byte(d.ID)
+
+		data, err := json.Marshal(d)
+		if err != nil {
+			log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "json.Marshal(v)"), "failed to parse data")
+			return err
+		}
+		value := data
+		err = txn.Set(key, value)
+		if err != nil {
+			log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "json.Marshal(v)"), "failed to insert data")
+
+		}
+	}
+
+	// Commit the batch write transaction
+	err = txn.Flush()
+	if err != nil {
+		log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "json.Marshal(v)"), "failed to load data in to the DB")
+	}
+
+	log.InfoContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "LoadDB"), "Mock data loaded in to the DB successfully")
 
 	return nil
 }
@@ -118,30 +150,31 @@ func (r *BadgerDB) Get(key string) (value []byte, err error) {
 	return val, err
 }
 
-// Set implements the DB interface. It attempts to store a value for a given key
-// and namespace. If the key/value pair cannot be saved, an error is returned.
-func (r *BadgerDB) Set(namespace, key string, v interface{}) error {
-
-	// Encode the data as JSON
-	data, err := json.Marshal(v)
-	if err != nil {
-		log.ErrorContext(r.ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "json.Marshal(v)"), "failed to set key %s for namespace %s: %v", key, namespace, err)
-		return err
-	}
-
-	// Insert the data into the database
-	err = r.db.Update(func(txn *badger.Txn) error {
-		err := txn.Set([]byte(key), data)
-		return err
-	})
-
-	if err != nil {
-		log.DebugContext(r.ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "r.db.Update()"), "failed to set key %s for namespace %s: %v", key, namespace, err)
-		return err
-	}
-
-	return nil
-}
+//
+//// Set implements the DB interface. It attempts to store a value for a given key
+//// and namespace. If the key/value pair cannot be saved, an error is returned.
+//func  Set(namespace, key string, v interface{}) error {
+//
+//	// Encode the data as JSON
+//	data, err := json.Marshal(v)
+//	if err != nil {
+//		log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "json.Marshal(v)"), "failed to set key %s for namespace %s: %v", key, namespace, err)
+//		return err
+//	}
+//
+//	// Insert the data into the database
+//	err = r.db.Update(func(txn *badger.Txn) error {
+//		err := txn.Set([]byte(key), data)
+//		return err
+//	})
+//
+//	if err != nil {
+//		log.DebugContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "r.db.Update()"), "failed to set key %s for namespace %s: %v", key, namespace, err)
+//		return err
+//	}
+//
+//	return nil
+//}
 
 // Has implements the DB interface. It returns a boolean reflecting if the
 // database has a given key for a namespace or not. An error is only returned if
@@ -158,12 +191,12 @@ func (r *BadgerDB) Has(key string) (ok bool, err error) {
 	return false, nil
 }
 
-// Close implements the DB interface. It closes the connection to the underlying
-// BadgerDB database as well as invoking the context's cancel function.
-func (r *BadgerDB) Close() error {
-	r.cancelFunc()
-	return r.db.Close()
-}
+//// Close implements the DB interface. It closes the connection to the underlying
+//// BadgerDB database as well as invoking the context's cancel function.
+//func (r *BadgerDB) Close() error {
+//	r.cancelFunc()
+//	return r.db.Close()
+//}
 
 // badgerNamespaceKey returns a composite key used for lookup and storage for a
 // given namespace and key.
@@ -174,22 +207,29 @@ func badgerNamespaceKey(namespace, key []byte) []byte {
 
 // runGC triggers the garbage collection for the BadgerDB backend database. It
 // should be run in a goroutine.
-func (r *BadgerDB) runGC() {
+func (r *BadgerDB) runGC(ctx context.Context) {
 	ticker := time.NewTicker(badgerGCInterval)
 	for {
 		select {
 		case <-ticker.C:
-			err := r.db.RunValueLogGC(badgerDiscardRatio)
-			if err != nil {
-				// don't report error when GC didn't result in any cleanup
-				if err == badger.ErrNoRewrite {
-					log.DebugContext(r.ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "jr.db.RunValueLogGC(badgerDiscardRatio)"), "no BadgerDB GC occurred: %v", err)
-				} else {
-					log.ErrorContext(r.ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "jr.db.RunValueLogGC(badgerDiscardRatio)"), "failed to GC BadgerDB: %v", err)
+			{
+				err := r.db.RunValueLogGC(badgerDiscardRatio)
+				if err != nil {
+					// don't report error when GC didn't result in any cleanup
+
+					if err == badger.ErrNoRewrite {
+						log.DebugContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "jr.db.RunValueLogGC(badgerDiscardRatio)"), "no BadgerDB GC occurred", err.Error())
+					} else {
+						log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "jr.db.RunValueLogGC(badgerDiscardRatio)"), "failed to GC BadgerDB", err.Error())
+					}
 				}
+				log.InfoContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "Cleaning"), "no BadgerDB GC occurred:")
+
 			}
 
-		case <-r.ctx.Done():
+		case <-ctx.Done():
+			log.InfoContext(ctx, fmt.Sprintf("%s.%s", logPrefixDatabase, "Cleaning"), "no BadgerDB GC occurred")
+
 			return
 		}
 	}

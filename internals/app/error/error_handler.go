@@ -13,9 +13,10 @@ import (
 // ErrorResponseValidation ...
 type ErrorResponseValidation struct {
 	Errors struct {
-		Message string      `json:"message"`
-		Code    int         `json:"code"`
-		Fields  interface{} `json:"fields"`
+		Message       string      `json:"message"`
+		Code          string      `json:"code"`
+		CorrelationId string      `json:"correlationId"`
+		Fields        interface{} `json:"fields"`
 	} `json:"errors"`
 }
 
@@ -71,8 +72,7 @@ type Error struct {
 	CorrelationId    string `json:"correlationId"`
 	Code             string `json:"code"`
 	Message          string `json:"message"`
-	DeveloperMessage string `json:"developerMessage"`
-	Trace            string `json:"trace"`
+	DeveloperMessage string `json:"developerMessage,omitempty"`
 }
 
 func createErrorResponse(correlationId string, code string, message string, developerMessage string) ApiErrorResponse {
@@ -97,7 +97,15 @@ func encodeValidationErrorResponse(ctx context.Context, e error, w http.Response
 	if len(err.Message) != 0 {
 		err.Message = "Validation Error"
 	}
-	res := createErrorResponse(correlationId, errorCode, err.Message, err.Trace)
+
+	res := ErrorResponseValidation{}
+	res.Errors.Message = "Validation Error"
+	res.Errors.Fields = err.Fields
+	res.Errors.Code = errorCode
+	res.Errors.CorrelationId = correlationId
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnprocessableEntity)
 

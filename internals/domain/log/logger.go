@@ -2,6 +2,7 @@ package log
 
 import (
 	"backend-engineering-challenge/internals/config"
+	"backend-engineering-challenge/internals/domain"
 	"context"
 	"fmt"
 	"log"
@@ -67,12 +68,13 @@ func logEntry(logType string, uuid string, prefix string, message interface{}, c
 }
 
 func format(typ string, uuid string, prefix string, message interface{}, params ...interface{}) string {
-	str := ""
+	str := fmt.Sprintf("%s", typ)
 
-	var messageFmt = `%s [%s] [%s] %v`
+	if uuid != "" {
+		str = fmt.Sprintf("%s [%s]", str, uuid)
+	}
 
-	str = fmt.Sprintf(messageFmt, typ, uuid, prefix,
-		fmt.Sprintf("%+v", message))
+	str = fmt.Sprintf("%s [%s] %v", str, prefix, fmt.Sprintf("%+v", message))
 
 	if len(params) != 0 {
 		str = fmt.Sprintf("%s %+v", str, params)
@@ -82,19 +84,19 @@ func format(typ string, uuid string, prefix string, message interface{}, params 
 }
 
 func ErrorContext(ctx context.Context, prefix string, message interface{}, params ...interface{}) {
-	logEntry(err, fmt.Sprintf("%+v", ctx.Value("uuid")), prefix, message, logColors[err], params...)
+	logEntry(err, fmt.Sprintf("%+v", ctx.Value(domain.CorrelationIdContextKey)), prefix, message, logColors[err], params...)
 }
 
 func InfoContext(ctx context.Context, prefix string, message interface{}, params ...interface{}) {
-	logEntry(info, fmt.Sprintf("%+v", ctx.Value("uuid")), prefix, message, logColors[info], params...)
+	logEntry(info, fmt.Sprintf("%+v", ctx.Value(domain.CorrelationIdContextKey)), prefix, message, logColors[info], params...)
 }
 
 func FatalContext(ctx context.Context, prefix string, message interface{}, params ...interface{}) {
-	logEntry(fatal, fmt.Sprintf("%+v", ctx.Value("uuid")), prefix, message, logColors[fatal], params...)
+	logEntry(fatal, fmt.Sprintf("%+v", ctx.Value(domain.CorrelationIdContextKey)), prefix, message, logColors[fatal], params...)
 }
 
 func TraceContext(ctx context.Context, prefix string, message interface{}, params ...interface{}) {
-	logEntry(trace, fmt.Sprintf("%+v", ctx.Value("uuid")), prefix, message, logColors[trace], params...)
+	logEntry(trace, fmt.Sprintf("%+v", ctx.Value(domain.CorrelationIdContextKey)), prefix, message, logColors[trace], params...)
 }
 func DebugContext(ctx context.Context, prefix string, message interface{}, params ...interface{}) {
 	logEntry(debug, fmt.Sprintf("%+v", ctx.Value("uuid")), prefix, message, logColors[debug], params...)
