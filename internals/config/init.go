@@ -8,14 +8,16 @@ import (
 var AppConf AppConfig
 
 type AppConfig struct {
-	Port  int
-	Debug bool
+	Port     int
+	Debug    bool
+	MockData string
 }
 
 //	Load the config from environment
 func InitConfig() {
 	AppConf.Port = loadInt(os.Getenv("PORT"))
 	AppConf.Debug = loadBool(os.Getenv("DEBUG"))
+	AppConf.MockData = os.Getenv("MOCK_DATA")
 }
 
 // Load int value from string

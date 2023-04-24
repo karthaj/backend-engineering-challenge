@@ -3,13 +3,15 @@ package http
 import (
 	"backend-engineering-challenge/internals/app/server"
 	"backend-engineering-challenge/internals/config"
-	"backend-engineering-challenge/internals/domain/logger"
+	"backend-engineering-challenge/internals/domain/log"
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"time"
 )
+
+const logPrefixRouter = "backend-engineering-challenge.internals.transport.http.router"
 
 var httpServer *http.Server
 
@@ -18,6 +20,8 @@ func Init(ctx context.Context) {
 	port := config.AppConf.Port
 
 	r.PathPrefix("/debug").Handler(http.DefaultServeMux)
+
+	r.Handle(`/v1.0/ping`, methodControl(http.MethodGet, server.Ping()))
 
 	r.Handle(`/v1.0/ping`, methodControl(http.MethodGet, server.Ping()))
 
@@ -51,16 +55,16 @@ func StartServer(ctx context.Context, port int, r http.Handler) {
 	go func(ctx context.Context) {
 		err := httpServer.ListenAndServe()
 		if err != nil {
-			logger.FatalContext(ctx, `Cannot start web server`, err)
+			log.FatalContext(ctx, `Cannot start web server`, err)
 		}
 		running <- `done`
 	}(ctx)
 
 	go func() {
-		logger.FatalContext(ctx, http.ListenAndServe(":6060", nil))
+		log.FatalContext(ctx, logPrefixRouter, http.ListenAndServe(":6060", nil))
 	}()
 
-	logger.InfoContext(ctx, fmt.Sprintf("HTTP router started on port \033[0;32m[%d]\033[0m", port))
+	log.InfoContext(ctx, logPrefixRouter, fmt.Sprintf("HTTP router started on port \033[0;32m[%d]\033[0m", port))
 
 	<-running
 }
@@ -68,8 +72,8 @@ func StartServer(ctx context.Context, port int, r http.Handler) {
 // StopServer ...
 func StopServer(ctx context.Context) {
 	if err := httpServer.Shutdown(ctx); err != nil {
-		logger.FatalContext(ctx, `Failed to gracefully shutdown server`)
+		log.FatalContext(ctx, logPrefixRouter, `Failed to gracefully shutdown server`)
 	}
 
-	logger.FatalContext(ctx, `Success gracefully shutting down server`)
+	log.FatalContext(ctx, logPrefixRouter, `Success gracefully shutting down server`)
 }

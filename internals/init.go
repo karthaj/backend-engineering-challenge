@@ -2,24 +2,36 @@ package internals
 
 import (
 	"backend-engineering-challenge/internals/config"
-	"backend-engineering-challenge/internals/domain/logger"
+	"backend-engineering-challenge/internals/database"
+	"backend-engineering-challenge/internals/domain/log"
 	"backend-engineering-challenge/internals/transport/http"
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"os"
 )
 
+const logPrefixInit = "backend-engineering-challenge.internals.init"
+
 func Init() {
 	sigs := make(chan os.Signal, 1)
 
-	// init logger
-	logger.Init()
+	// init log
+	log.Init()
 
 	// Load Config
 	config.InitConfig()
 	parentCtx := context.WithValue(context.Background(), "uuid", uuid.New())
-	ctx, _ := context.WithCancel(parentCtx)
+	ctx, cancel := context.WithCancel(parentCtx)
+	defer cancel()
+
+	database.Init(ctx)
+
+	err := database.DbCon.LoadDB()
+	if err != nil {
+		log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixInit, "database.DbCon.LoadDB()"), "error", err)
+	}
 
 	http.Init(ctx)
 
