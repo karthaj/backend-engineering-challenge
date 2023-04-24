@@ -62,17 +62,17 @@ func GetAccountDetailsByID() (handler http.Handler) {
 
 }
 
-func GetAccountDetailsByName() (handler http.Handler) {
+func GetAllAccountDetails() (handler http.Handler) {
 	svc := service.AccountService{}
 
 	return httpTransporter.NewServer(
 		middleware.NewParser()(
 			func(ctx context.Context, request interface{}) (response interface{}, err error) {
-				req := request.(req_res.GetAccountDetailsByNameRequest)
-				return svc.GetAccountDetailsByName(ctx, req)
+
+				return svc.GetAllAccountDetails(ctx)
 			}),
-		codec.DecodeGetAccountDetailsByName,
-		codec.EncodeGetAccountDetailsByName,
+		codec.DecodeGetAllAccountDetails,
+		codec.EncodeGetAllAccountDetails,
 		opts...,
 	)
 

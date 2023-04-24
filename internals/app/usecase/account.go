@@ -73,21 +73,21 @@ func (a AccountUsecase) GetAccountDetailsByID(ctx context.Context, id string) (r
 	return res, nil
 }
 
-// GetAccountDetailsByName returns the account details with the given name.
-// If no account is found with the given name, returns an error
-// Otherwise, returns the details of the account as an AccountResponse.
+// GetAllAccountDetails returns all the account details.
+// If no account is found, returns an error
+// Otherwise, returns the details of the accounts as an []AccountResponse.
 // If an error occurs while retrieving the account details, returns an error response.
-func (a AccountUsecase) GetAccountDetailsByName(ctx context.Context, name string) (req_res.AccountResponse, error) {
+func (a AccountUsecase) GetAllAccountDetails(ctx context.Context) ([]req_res.AccountResponse, error) {
 
 	corId := ctx.Value(domain.CorrelationIdContextKey).(string)
 
-	res := req_res.AccountResponse{}
+	res := []req_res.AccountResponse{}
 
-	data, err := a.AccountRepository.GetAccountDetailsByName(ctx, name)
+	data, err := a.AccountRepository.GetAllAccountDetails(ctx)
 	if data == nil {
 		log.DebugContext(
 			ctx,
-			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByName"), "No data found", fmt.Sprintf("Name : %v", name))
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByName"), "No data found")
 
 		return res, errors.NewDomainError(corId, "Account not found", "", errors.ErrAccountNotFound)
 	}
@@ -100,13 +100,28 @@ func (a AccountUsecase) GetAccountDetailsByName(ctx context.Context, name string
 		return res, errors.NewApplicationError(corId, "Internal error occurred", "DB error", errors.ErrBatabaseRead)
 	}
 
-	err = json.Unmarshal(data, &res)
-	if err != nil {
-		log.ErrorContext(
-			ctx,
-			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByName"), "Unable to parse value to account object")
+	for _, datum := range data {
+		var t entity.AccountEntity
+		err = json.Unmarshal(datum, &t)
+		if err != nil {
+			log.ErrorContext(
+				ctx,
+				fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByName"), "Unable to parse value to account object")
 
-		return res, errors.NewApplicationError(corId, "Unable to fetch data", "Unable to parse the value to the account object", errors.ErrBatabaseRead)
+			return res, errors.NewApplicationError(corId, "Unable to fetch data", "Unable to parse the value to the account object", errors.ErrBatabaseRead)
+		}
+		tt, _ := strconv.ParseFloat(t.Balance, 64)
+		res = append(res, req_res.AccountResponse{
+			ID: t.ID, Name: t.Name, Balance: tt,
+		})
+	}
+
+	if len(res) == 0 {
+		log.DebugContext(
+			ctx,
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByName"), "No accounts found")
+
+		return res, errors.NewApplicationError(corId, "No Accounts found", "", errors.ErrBatabaseRead)
 	}
 
 	return res, nil
@@ -118,84 +133,144 @@ func (a AccountUsecase) GetAccountDetailsByName(ctx context.Context, name string
 // thread-safety and releases the lock once the transaction is complete.
 func (a AccountUsecase) DoTransaction(ctx context.Context, req req_res.DoTransactionRequest) (req_res.TransactionAccResponse, error) {
 
-	a.M.Lock()
-	defer a.M.Unlock()
+	a.M.Lock()         // acquire lock on account
+	defer a.M.Unlock() // release lock when function returns
 
-	corId := ctx.Value(domain.CorrelationIdContextKey).(string)
+	corId := ctx.Value(domain.CorrelationIdContextKey).(string) // get correlation ID from context
 
-	account := entity.AccountEntity{}
-
-	data, err := a.AccountRepository.GetAccountDetailsByID(ctx, req.ID)
-	if data == nil {
+	if req.FromAccountId == req.ToAccountId { // check if the transaction is being made to the same account
 		log.DebugContext(
 			ctx,
-			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Account not found", fmt.Sprintf("ID : %v", req.ID))
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "You cannot do transactions to the same account", fmt.Sprintf("ID : %v", req.ToAccountId))
 
-		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "Invalid account to perform transaction", "", errors.ErrAccountNotFound)
+		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "You cannot do transactions to the same account", "", errors.ErrAccountNotFound) // return error if transaction is being made to the same account
 	}
 
-	if err != nil {
+	fromAcc := entity.AccountEntity{} // create empty AccountEntity objects for sender and receiver accounts
+	toAcc := entity.AccountEntity{}
+
+	//  <<<<<<<<<< FROM ACCOUNT
+	//  <<<<<<<<<< FROM ACCOUNT
+	//  <<<<<<<<<< FROM ACCOUNT
+	fromAccData, err := a.AccountRepository.GetAccountDetailsByID(ctx, req.FromAccountId) // get account details for sender
+	// check if sender account exists
+	if fromAccData == nil {
+		log.DebugContext(
+			ctx,
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Account not found", fmt.Sprintf("ID : %v", req.FromAccountId))
+
+		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "Invalid account to perform transaction", "", errors.ErrAccountNotFound) // return error if sender account is invalid
+	}
+
+	if err != nil { // check for any errors while retrieving account details
 		log.ErrorContext(
 			ctx,
 			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Unable to get value from DB")
 
-		return req_res.TransactionAccResponse{}, errors.NewApplicationError(corId, "Internal error occurred", "DB error", errors.ErrBatabaseRead)
+		return req_res.TransactionAccResponse{}, errors.NewApplicationError(corId, "Internal error occurred", "DB error", errors.ErrBatabaseRead) // return application error if there was an error while retrieving account details
 	}
 
-	err = json.Unmarshal(data, &account)
+	err = json.Unmarshal(fromAccData, &fromAcc) // unmarshal account details to sender account object
+	// check for any errors while unmarshalling account details
 	if err != nil {
 		log.ErrorContext(
 			ctx,
 			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Unable to parse value to account object")
 
-		return req_res.TransactionAccResponse{}, errors.NewApplicationError(corId, "Unable to fetch data", "Unable to parse the value to the account object", errors.ErrBatabaseRead)
+		return req_res.TransactionAccResponse{}, errors.NewApplicationError(corId, "Unable to fetch data", "Unable to parse the value to the account object", errors.ErrBatabaseRead) // return application error if there was an error while unmarshaling account details
 	}
 
-	if account.ID == "" {
+	if fromAcc.ID == "" { // check if sender account ID is empty
 		log.ErrorContext(
 			ctx,
 			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Unable to query")
 
-		return req_res.TransactionAccResponse{}, errors.NewApplicationError(corId, "Internal error occurred", "DB error", errors.ErrBatabaseRead)
+		return req_res.TransactionAccResponse{}, errors.NewApplicationError(corId, "Internal error occurred", "DB error", errors.ErrBatabaseRead) // return application error if there was an error while querying sender account details
 	}
 
-	balance, _ := strconv.ParseFloat(account.Balance, 64)
-
-	if req.TransactionType == "CR" && balance <= req.Amount {
+	balance, _ := strconv.ParseFloat(fromAcc.Balance, 64) // convert sender account balance to float64
+	if balance < req.Amount {
 		log.DebugContext(
 			ctx,
-			fmt.Sprintf("%s.%s", usecasePrefixAccount, "DoTransaction"), "Insufficient account balance", fmt.Sprintf("req : %+v", req), fmt.Sprintf("account : %+v", account))
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "DoTransaction"), "Insufficient account balance", fmt.Sprintf("req : %+v", req), fmt.Sprintf("account : %+v", toAcc))
 
 		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "Insufficient account balance", "", errors.ErrAccountBalanceInsufficient)
 	}
 
-	if req.TransactionType == domain.TrxDebit {
-		// credit the amount
-		req.Amount = -1 * req.Amount
+	//  >>>>>>>>>>> TO ACCOUNT
+	//  >>>>>>>>>>> TO ACCOUNT
+	//  >>>>>>>>>>> TO ACCOUNT
+	// Get account details of the sender
+	toAccData, err := a.AccountRepository.GetAccountDetailsByID(ctx, req.ToAccountId)
+	if toAccData == nil {
+		// Log account not found error
+		log.DebugContext(
+			ctx,
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Account not found", fmt.Sprintf("ID : %v", req.FromAccountId))
+		// Return domain error for invalid account
+		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "Invalid account to perform transaction", "", errors.ErrAccountNotFound)
 	}
 
-	balance += req.Amount
-
-	trx := entity.AccountEntity{
-		ID:      req.ID,
-		Name:    account.Name,
-		Balance: fmt.Sprintf("%2f", balance),
-	}
-
-	_, err = a.AccountRepository.DoTransaction(ctx, trx)
 	if err != nil {
+		// Log error for DB read failure
 		log.ErrorContext(
 			ctx,
-			fmt.Sprintf("%s.%s", usecasePrefixAccount, "DoTransaction"), "Insufficient account balance", fmt.Sprintf("req : %+v", req), fmt.Sprintf("account : %+v", account))
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Unable to get value from DB")
+		// Return application error for internal error
+		return req_res.TransactionAccResponse{}, errors.NewApplicationError(corId, "Internal error occurred", "DB error", errors.ErrBatabaseRead)
+	}
 
+	// Unmarshal JSON data to account object
+	err = json.Unmarshal(toAccData, &toAcc)
+	if err != nil {
+		// Log error for parsing data failure
+		log.ErrorContext(
+			ctx,
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Unable to parse value to account object")
+		// Return application error for internal error
+		return req_res.TransactionAccResponse{}, errors.NewApplicationError(corId, "Unable to fetch data", "Unable to parse the value to the account object", errors.ErrBatabaseRead)
+	}
+
+	if toAcc.ID == "" {
+		// Log error for DB query failure
+		log.ErrorContext(
+			ctx,
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Unable to query")
+		// Return application error for internal error
+		return req_res.TransactionAccResponse{}, errors.NewApplicationError(corId, "Internal error occurred", "DB error", errors.ErrBatabaseRead)
+	}
+
+	// Convert balance strings to float64
+	fromBal, _ := strconv.ParseFloat(fromAcc.Balance, 64)
+	toBal, _ := strconv.ParseFloat(toAcc.Balance, 64)
+
+	// Deduct transaction amount from sender balance and add it to receiver balance
+	fromAcc.Balance = fmt.Sprintf("%2f", fromBal-req.Amount)
+	toAcc.Balance = fmt.Sprintf("%2f", toBal+req.Amount)
+
+	// Create transaction request entity
+	requestEntity := entity.TransactionRequestEntity{
+		ToAcc:   toAcc,
+		FromAcc: fromAcc,
+	}
+
+	// Perform transaction in repository
+	_, err = a.AccountRepository.DoTransaction(ctx, requestEntity)
+	if err != nil {
+		// Log error for insufficient balance and failed transaction
+		log.ErrorContext(
+			ctx,
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "DoTransaction"), "Transaction failed", fmt.Sprintf("req : %+v", req), fmt.Sprintf("requestEntity : %+v", requestEntity))
+		// Return domain error for transaction failure
 		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "Transaction failed", "", errors.ErrTransactionFailed)
 	}
 
+	// Create transaction response object
 	res := req_res.TransactionAccResponse{
-		ID:        req.ID,
-		Name:      account.Name,
-		Balance:   balance,
-		Reference: time.Now().Format(req.TransactionType + "20060201150405"),
+		ID:        req.ToAccountId,
+		Name:      toAcc.Name,
+		Balance:   toBal + req.Amount,
+		Reference: time.Now().Format("TRX-20060201150405"),
 	}
 
 	return res, nil

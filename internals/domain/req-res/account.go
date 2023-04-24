@@ -16,9 +16,9 @@ type TransactionAccResponse struct {
 }
 
 type DoTransactionRequest struct {
-	ID              string  `json:"id"  validate:"required"`
-	Amount          float64 `json:"amount"  validate:"required"`
-	TransactionType string  `json:"transactionType"  validate:"required"`
+	Amount        float64 `json:"amount" validate:"required"`
+	ToAccountId   string  `json:"toAccountId" validate:"required"`
+	FromAccountId string  `json:"fromAccountId" validate:"required"`
 }
 
 type GetAccountDetailsByIDRequest struct {
@@ -38,7 +38,7 @@ type DoTransactionResponse struct {
 
 type GeneralAccountResponse struct {
 	Data struct {
-		Account AccountResponse `json:"reference"`
+		Account []AccountResponse `json:"Accounts"`
 	} `json:"data"`
 	Meta CommonMetaResponse `json:"meta"`
 }

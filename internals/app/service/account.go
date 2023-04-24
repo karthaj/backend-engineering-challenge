@@ -43,10 +43,9 @@ func (r AccountService) GetAccountDetailsByID(ctx context.Context, req req_res.G
 	id := req.ID
 	return data.GetAccountDetailsByID(ctx, id)
 }
-func (r AccountService) GetAccountDetailsByName(ctx context.Context, req req_res.GetAccountDetailsByNameRequest) (interface{}, error) {
+func (r AccountService) GetAllAccountDetails(ctx context.Context) (interface{}, error) {
 	data := usecase.NewAccountUsecase(repository.AccountRepository, M)
-	id := req.Name
-	return data.GetAccountDetailsByName(ctx, id)
+	return data.GetAllAccountDetails(ctx)
 }
 func (r AccountService) DoTransaction(ctx context.Context, req req_res.DoTransactionRequest) (interface{}, error) {
 	data := usecase.NewAccountUsecase(repository.AccountRepository, M)

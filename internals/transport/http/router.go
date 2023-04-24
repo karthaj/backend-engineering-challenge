@@ -28,7 +28,7 @@ func Init(ctx context.Context) {
 
 	r.Handle(`/v1.0/account/transaction`, methodControl(http.MethodPost, server.DoTransaction()))
 	r.Handle(`/v1.0/account/get/id/{id}`, methodControl(http.MethodGet, server.GetAccountDetailsByID()))
-	//r.Handle(`/v1.0/account/get/name/{name}`, methodControl(http.MethodGet, server.GetAccountDetailsByName()))
+	r.Handle(`/v1.0/account/get/all`, methodControl(http.MethodGet, server.GetAllAccountDetails()))
 
 	// start server with given context, port number, and router
 	StartServer(ctx, port, r)

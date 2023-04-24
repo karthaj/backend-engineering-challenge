@@ -7,6 +7,6 @@ import (
 
 type AccountRepositoryInterface interface {
 	GetAccountDetailsByID(ctx context.Context, id string) ([]byte, error)
-	GetAccountDetailsByName(ctx context.Context, name string) ([]byte, error)
-	DoTransaction(ctx context.Context, data entity.AccountEntity) (interface{}, error)
+	GetAllAccountDetails(ctx context.Context) ([][]byte, error)
+	DoTransaction(ctx context.Context, data entity.TransactionRequestEntity) (interface{}, error)
 }

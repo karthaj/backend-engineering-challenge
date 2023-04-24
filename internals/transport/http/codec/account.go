@@ -55,41 +55,23 @@ func EncodeGetAccountDetailsByID(ctx context.Context, w http.ResponseWriter, dat
 	result := req_res.GeneralAccountResponse{}
 	result.Meta.Code = 200
 	result.Meta.Message = "Success"
-	result.Data.Account = res
+	result.Data.Account = append(result.Data.Account, res)
 	w.Header().Set("content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	return json.NewEncoder(w).Encode(result)
 
 }
 
-func DecodeGetAccountDetailsByName(ctx context.Context, req *http.Request) (request interface{}, err error) {
+func DecodeGetAllAccountDetails(_ context.Context, _ *http.Request) (request interface{}, err error) {
 
-	corId := ctx.Value(domain.CorrelationIdContextKey).(string)
-	params := mux.Vars(req)
-	name := strings.Trim(params["name"], " ")
-
-	if name == "" {
-		log.ErrorContext(
-			ctx, fmt.Sprintf("%s.%s", logPrefixAccount, "GetAccountDetailsByIDRequest"),
-			`DecodeGetAccountDetailsByName, Name not found`)
-
-		errs := make(map[string]string)
-		errs["name"] = "param | required"
-
-		return nil, errors.NewValidationError(corId, "Name required", string(debug.Stack()), errs, errors.ErrParamNotFound)
-	}
-
-	var data req_res.GetAccountDetailsByNameRequest
-	data.Name = name
-
-	return data, nil
+	return nil, nil
 
 }
 
-func EncodeGetAccountDetailsByName(ctx context.Context, w http.ResponseWriter, data interface{}) (err error) {
+func EncodeGetAllAccountDetails(ctx context.Context, w http.ResponseWriter, data interface{}) (err error) {
 	corId := ctx.Value(domain.CorrelationIdContextKey).(string)
 
-	res, ok := data.(req_res.AccountResponse)
+	res, ok := data.([]req_res.AccountResponse)
 	if !ok {
 		log.ErrorContext(
 			ctx, fmt.Sprintf("%s.%s", logPrefixAccount, "DecodeDoTransaction"),
