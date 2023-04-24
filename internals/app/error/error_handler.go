@@ -105,8 +105,6 @@ func encodeValidationErrorResponse(ctx context.Context, e error, w http.Response
 	res.Errors.CorrelationId = correlationId
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusBadRequest)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnprocessableEntity)
 
 	return json.NewEncoder(w).Encode(res)

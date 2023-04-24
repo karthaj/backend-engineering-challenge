@@ -5,9 +5,11 @@ import (
 )
 
 type DomainError struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-	Trace   string `json:"trace"`
+	Message          string `json:"message"`
+	Code             int    `json:"code"`
+	Trace            string `json:"trace"`
+	CorrelationId    string `json:"correlationId"`
+	DeveloperMessage string `json:"developerMessage"`
 }
 
 func (e DomainError) Error() string {
@@ -15,15 +17,18 @@ func (e DomainError) Error() string {
 }
 
 type ApplicationError struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-	Trace   string `json:"trace"`
+	Message          string `json:"message"`
+	Code             int    `json:"code"`
+	Trace            string `json:"trace"`
+	CorrelationId    string `json:"correlationId"`
+	DeveloperMessage string `json:"developerMessage"`
 }
 
 type AuthenticationError struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-	Trace   string `json:"trace"`
+	Message          string `json:"message"`
+	Code             int    `json:"code"`
+	Trace            string `json:"trace"`
+	DeveloperMessage string `json:"developerMessage"`
 }
 
 func (e AuthenticationError) Error() string {
@@ -59,6 +64,11 @@ func (e GeneralError) Error() string {
 	return "General Error"
 }
 
+// NewAuthenticationError creates a new instance of AuthenticationError with the provided message and error code.
+// Parameters:
+// - messages: the error message.
+// - code: the error code.
+// Returns: a new instance of AuthenticationError.
 func NewAuthenticationError(messages string, code int) AuthenticationError {
 	return AuthenticationError{
 		Message: messages,
@@ -66,8 +76,15 @@ func NewAuthenticationError(messages string, code int) AuthenticationError {
 	}
 }
 
-func NewDomainError(correlationId string, message string, developerMessage string, code int) GeneralError {
-	return GeneralError{
+// NewDomainError creates a new instance of DomainError with the provided correlation ID, message, developer message and error code.
+// Parameters:
+// - correlationId: the correlation ID for the error.
+// - message: the error message.
+// - developerMessage: the error message for developers.
+// - code: the error code.
+// Returns: a new instance of DomainError.
+func NewDomainError(correlationId string, message string, developerMessage string, code int) DomainError {
+	return DomainError{
 		Code:             code,
 		CorrelationId:    correlationId,
 		Message:          message,
@@ -75,8 +92,15 @@ func NewDomainError(correlationId string, message string, developerMessage strin
 	}
 }
 
-func NewApplicationError(correlationId string, message string, developerMessage string, code int) GeneralError {
-	return GeneralError{
+// NewApplicationError creates a new instance of ApplicationError with the provided correlation ID, message, developer message and error code.
+// Parameters:
+// - correlationId: the correlation ID for the error.
+// - message: the error message.
+// - developerMessage: the error message for developers.
+// - code: the error code.
+// Returns: a new instance of ApplicationError.
+func NewApplicationError(correlationId string, message string, developerMessage string, code int) ApplicationError {
+	return ApplicationError{
 		Code:             code,
 		CorrelationId:    correlationId,
 		Message:          message,
@@ -84,6 +108,14 @@ func NewApplicationError(correlationId string, message string, developerMessage 
 	}
 }
 
+// NewValidationError creates a new instance of ValidationError with the provided correlation ID, message, developer message, fields and error code.
+// Parameters:
+// - correlationId: the correlation ID for the error.
+// - message: the error message.
+// - developerMessage: the error message for developers.
+// - fields: a map of field names to error messages.
+// - code: the error code.
+// Returns: a new instance of ValidationError.
 func NewValidationError(correlationId string, message string, developerMessage string, fields map[string]string, code int) ValidationError {
 	return ValidationError{
 		Code:             code,

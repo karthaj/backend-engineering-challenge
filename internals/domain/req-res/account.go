@@ -7,11 +7,12 @@ type AccountResponse struct {
 	Balance float64 `json:"balance"`
 }
 
-// AccountResponse struct represents the account information.
-type AccountEntity struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Balance string `json:"balance"`
+// TransactionAccResponse struct represents the account information.
+type TransactionAccResponse struct {
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	Balance   float64 `json:"balance"`
+	Reference string  `json:"reference"`
 }
 
 type DoTransactionRequest struct {
@@ -30,7 +31,14 @@ type GetAccountDetailsByNameRequest struct {
 
 type DoTransactionResponse struct {
 	Data struct {
-		Account AccountResponse `json:"account"`
+		Account TransactionAccResponse `json:"account"`
+	} `json:"data"`
+	Meta CommonMetaResponse `json:"meta"`
+}
+
+type GeneralAccountResponse struct {
+	Data struct {
+		Account AccountResponse `json:"reference"`
 	} `json:"data"`
 	Meta CommonMetaResponse `json:"meta"`
 }

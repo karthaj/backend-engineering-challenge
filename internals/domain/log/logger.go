@@ -99,5 +99,5 @@ func TraceContext(ctx context.Context, prefix string, message interface{}, param
 	logEntry(trace, fmt.Sprintf("%+v", ctx.Value(domain.CorrelationIdContextKey)), prefix, message, logColors[trace], params...)
 }
 func DebugContext(ctx context.Context, prefix string, message interface{}, params ...interface{}) {
-	logEntry(debug, fmt.Sprintf("%+v", ctx.Value("uuid")), prefix, message, logColors[debug], params...)
+	logEntry(debug, fmt.Sprintf("%+v", ctx.Value(domain.CorrelationIdContextKey)), prefix, message, logColors[debug], params...)
 }

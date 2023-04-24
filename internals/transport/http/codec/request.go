@@ -12,20 +12,24 @@ import (
 
 const bearer = "bearer"
 
+// DecodeHttp returns a middleware function that extracts the correlation ID and JWT token from HTTP request headers and adds them to the context.
 func DecodeHttp() httpTransporter.RequestFunc {
 	return func(ctx context.Context, req *http.Request) context.Context {
 
-		//set correlation id
+		// Set correlation id
 		corId := req.Header.Get("correlation-id")
 		if corId == "" {
 			corId = uuid.New().String()
 		}
 		ctx = context.WithValue(ctx, domain.CorrelationIdContextKey, corId)
 
+		// Extract JWT token from Authorization header
 		token, ok := extractTokenFromAuthHeader(req.Header.Get("Authorization"))
 		if !ok {
 			return ctx
 		}
+
+		// Add JWT token to context
 		return context.WithValue(ctx, middleware.JWTTokenContextKey, token)
 	}
 }

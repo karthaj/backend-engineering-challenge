@@ -22,7 +22,7 @@ func DecodeDoTransaction(ctx context.Context, req *http.Request) (request interf
 
 	if err := json.NewDecoder(req.Body).Decode(&requestData); err != nil {
 		log.ErrorContext(
-			ctx, fmt.Sprintf("%s.%s", logPrefixAccount, "DecodeDoTransaction"),
+			ctx, fmt.Sprintf("%s.%s", logPrefixAccountTransaction, "DecodeDoTransaction"),
 			fmt.Sprintf(`Decode DoTransactionRequest, json decode, Error:%v`, err))
 
 		errs := make(map[string]string)
@@ -36,7 +36,7 @@ func DecodeDoTransaction(ctx context.Context, req *http.Request) (request interf
 
 	if err != nil {
 		log.ErrorContext(
-			ctx, fmt.Sprintf("%s.%s", logPrefixAccount, "DecodeDoTransaction"),
+			ctx, fmt.Sprintf("%s.%s", logPrefixAccountTransaction, "DecodeDoTransaction"),
 			fmt.Sprintf(`Parse DoTransactionRequest, json parse, Error:%v`, err.Error()))
 
 		errs := make(map[string]string)
@@ -54,10 +54,10 @@ func DecodeDoTransaction(ctx context.Context, req *http.Request) (request interf
 func EncodeDoTransaction(ctx context.Context, w http.ResponseWriter, data interface{}) (err error) {
 	corId := ctx.Value(domain.CorrelationIdContextKey).(string)
 
-	res, ok := data.(req_res.AccountResponse)
+	res, ok := data.(req_res.TransactionAccResponse)
 	if !ok {
 		log.ErrorContext(
-			ctx, fmt.Sprintf("%s.%s", logPrefixAccount, "DecodeDoTransaction"),
+			ctx, fmt.Sprintf("%s.%s", logPrefixAccountTransaction, "DecodeDoTransaction"),
 			fmt.Sprintf(`Parse DoTransactionRequest, json parse, Error:%v`, err.Error()))
 
 		return errors.NewDomainError(corId, "Unable to process response", string(debug.Stack()), errors.ErrResponseParse)

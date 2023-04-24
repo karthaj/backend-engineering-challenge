@@ -52,7 +52,7 @@ func EncodeGetAccountDetailsByID(ctx context.Context, w http.ResponseWriter, dat
 		return errors.NewDomainError(corId, "Unable to process response", string(debug.Stack()), errors.ErrResponseParse)
 	}
 
-	result := req_res.DoTransactionResponse{}
+	result := req_res.GeneralAccountResponse{}
 	result.Meta.Code = 200
 	result.Meta.Message = "Success"
 	result.Data.Account = res
@@ -98,7 +98,7 @@ func EncodeGetAccountDetailsByName(ctx context.Context, w http.ResponseWriter, d
 		return errors.NewDomainError(corId, "Unable to process response", string(debug.Stack()), errors.ErrResponseParse)
 	}
 
-	result := req_res.DoTransactionResponse{}
+	result := req_res.GeneralAccountResponse{}
 	result.Meta.Code = 200
 	result.Meta.Message = "Success"
 	result.Data.Account = res
