@@ -15,6 +15,12 @@ consistently resulted in high code quality and maintainability.
 
 ## Overview:
 This is a Go program that emulates a RESTful API for money transfers between accounts. The application downloads account information from a JSON file, ingests it into an in-memory datastore, and provides endpoints to view all accounts and perform transfers between them.
+
+## High Level Architecture
+![image](https://user-images.githubusercontent.com/48028155/234168699-d142256b-6094-4986-9c75-ade53f96e509.png)
+
+
+
 ### features 
   1. Authenticated with JWT - ( Not implemented 100% )
   2. Custom Logs on server console 
