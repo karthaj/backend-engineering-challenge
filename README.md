@@ -19,6 +19,10 @@ This is a Go program that emulates a RESTful API for money transfers between acc
 ## High Level Architecture
 ![image](https://user-images.githubusercontent.com/48028155/234176587-cf36e7ef-5cc5-488e-8eb3-eabf7cb904f5.png)
 
+### Private API Request Flow with JWT Authentication Middleware
+![go-arch-private-api-request-flow](https://user-images.githubusercontent.com/48028155/234178020-fb46f851-278c-4c55-9c4c-818ff91a7c16.png)
+
+---
 
 ### features 
   1. Authenticated with JWT - required to process call but Not implemented payload validation ( expiery, invalid, blacklisted ) 
@@ -45,7 +49,7 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
 
 #### Request - GET
 
-   `{BASE-API}/v1.0/account/get/id/23477b82-84a1-41fe-b259-c41179182451`
+   `{ BASE-API }/v1.0/account/get/id/{ ACCOUNT-ID }`
 
     curl --location --request GET 'localhost:8085/v1.0/account/get/id/23477b82-84a1-41fe-b259-c41179182451' \
     --header 'correlation-id: ASHFAk-c0d2-45f2-84b2-0349a4af1b4e' \
@@ -85,7 +89,7 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
 ## Get list of all accounts
 
 #### Request - GET
-`{BASE-API}/v1.0/account/get/all`
+`{ BASE-API }/v1.0/account/get/all`
 
     curl --location --request GET 'localhost:8085/v1.0/account/get/all' \
     --header 'correlation-id: ASHFAk-c0d2-45f2-84b2-0349a4af1b4e' \
@@ -134,11 +138,16 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
 ## Perform transfers
 
 #### Request - POST
-`{BASE-API}/v1.0/account/get/all`
+`{ BASE-API }/v1.0/account/transaction`
 
-    curl --location --request GET 'localhost:8085/v1.0/account/get/all' \
-    --header 'correlation-id: ASHFAk-c0d2-45f2-84b2-0349a4af1b4e' \
-    --header 'Authorization: Bearer test-token'
+    curl --location --request POST 'localhost:8085/v1.0/account/transaction' \
+    --header 'correlation-id: ASHFAK-c0d2-45f2-84b2-0349a4af1b4e' \
+    --header 'Authorization: Bearer test-token' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "amount": 100,
+        "fromAccountId": "4c0b1e82-2df3-48a1-a297-094cddde5546"
+    }'
 
 #### Success Response - 200
 
@@ -156,9 +165,10 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
             "message": "Success"
         }
     }
-
+    
 
 #### Error Response - 400
+
 
     {
         "errors": [
@@ -192,6 +202,18 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
         ]
     }
 
+#### Error Response - 422
+
+    {
+        "errors": {
+            "message": "Validation Error",
+            "code": "API-100101",
+            "correlationId": "ASHFAK-c0d2-45f2-84b2-0349a4af1b4e",
+            "fields": {
+                "ToAccountId": "required"
+            }
+        }
+    }
 
 ---
  
