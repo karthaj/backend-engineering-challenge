@@ -15,6 +15,13 @@ consistently resulted in high code quality and maintainability.
 
 ## Overview:
 This is a Go program that emulates a RESTful API for money transfers between accounts. The application downloads account information from a JSON file, ingests it into an in-memory datastore, and provides endpoints to view all accounts and perform transfers between them.
+### features 
+  1. Authenticated with JWT - ( Not implemented 100% )
+  2. Custom Logs on server console 
+  3. Validation of endpoint and method
+  4. Custom error handling
+  5. Im memory DB - BadgerDB ( new to the library )
+    
 
 # REST API example application
 ## Install
@@ -39,7 +46,7 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
     --header 'correlation-id: ASHFAk-c0d2-45f2-84b2-0349a4af1b4e' \
     --header 'Authorization: Bearer test-token'
 
-#### Response - 200
+#### Success Response - 200
 
     {
         "data": {
@@ -57,7 +64,7 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
     }
 
 
-#### Response - 400
+#### Error Response - 400
 
     {
         "errors": [
@@ -79,7 +86,7 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
     --header 'correlation-id: ASHFAk-c0d2-45f2-84b2-0349a4af1b4e' \
     --header 'Authorization: Bearer test-token'
 
-#### Response - 200
+#### Success Response - 200
 
     {
         "data": {
@@ -105,7 +112,7 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
     {
 
 
-#### Response - 400
+#### Error Response - 400
 
     {
         "errors": [
@@ -128,7 +135,7 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
     --header 'correlation-id: ASHFAk-c0d2-45f2-84b2-0349a4af1b4e' \
     --header 'Authorization: Bearer test-token'
 
-#### Response - 200
+#### Success Response - 200
 
     {
         "data": {
@@ -146,7 +153,7 @@ The REST API to the backend-engineering-challenge is given below. Tester may use
     }
 
 
-#### Response - 400
+#### Error Response - 400
 
     {
         "errors": [
