@@ -55,7 +55,7 @@ func EncodeGetAccountDetailsByID(ctx context.Context, w http.ResponseWriter, dat
 	result := req_res.GeneralAccountResponse{}
 	result.Meta.Code = 200
 	result.Meta.Message = "Success"
-	result.Data.Account = append(result.Data.Account, res)
+	result.Data.Accounts = append(result.Data.Accounts, res)
 	w.Header().Set("content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	return json.NewEncoder(w).Encode(result)
@@ -83,7 +83,7 @@ func EncodeGetAllAccountDetails(ctx context.Context, w http.ResponseWriter, data
 	result := req_res.GeneralAccountResponse{}
 	result.Meta.Code = 200
 	result.Meta.Message = "Success"
-	result.Data.Account = res
+	result.Data.Accounts = res
 	w.Header().Set("content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	return json.NewEncoder(w).Encode(result)

@@ -76,7 +76,7 @@ func LoadDB(ctx context.Context) error {
 		return err
 	}
 
-	// Unmarshal JSON data into Account slice
+	// Unmarshal JSON data into Accounts slice
 	var accounts []entity.AccountEntity
 	err = json.Unmarshal(loadData(ctx), &accounts)
 	if err != nil {

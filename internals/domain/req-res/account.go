@@ -38,7 +38,7 @@ type DoTransactionResponse struct {
 
 type GeneralAccountResponse struct {
 	Data struct {
-		Account []AccountResponse `json:"Accounts"`
+		Accounts []AccountResponse `json:"accounts"`
 	} `json:"data"`
 	Meta CommonMetaResponse `json:"meta"`
 }

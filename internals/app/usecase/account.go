@@ -87,9 +87,9 @@ func (a AccountUsecase) GetAllAccountDetails(ctx context.Context) ([]req_res.Acc
 	if data == nil {
 		log.DebugContext(
 			ctx,
-			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByName"), "No data found")
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByName"), "No accounts")
 
-		return res, errors.NewDomainError(corId, "Account not found", "", errors.ErrAccountNotFound)
+		return res, errors.NewDomainError(corId, "No accounts available", "", errors.ErrAccountNotFound)
 	}
 
 	if err != nil {
@@ -157,9 +157,9 @@ func (a AccountUsecase) DoTransaction(ctx context.Context, req req_res.DoTransac
 	if fromAccData == nil {
 		log.DebugContext(
 			ctx,
-			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Account not found", fmt.Sprintf("ID : %v", req.FromAccountId))
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Account not found", fmt.Sprintf("FromAccountId ID : %v", req.FromAccountId))
 
-		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "Invalid account to perform transaction", "", errors.ErrAccountNotFound) // return error if sender account is invalid
+		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "Invalid sender account to perform transaction", "", errors.ErrAccountNotFound) // return error if sender account is invalid
 	}
 
 	if err != nil { // check for any errors while retrieving account details
@@ -206,9 +206,9 @@ func (a AccountUsecase) DoTransaction(ctx context.Context, req req_res.DoTransac
 		// Log account not found error
 		log.DebugContext(
 			ctx,
-			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Account not found", fmt.Sprintf("ID : %v", req.FromAccountId))
+			fmt.Sprintf("%s.%s", usecasePrefixAccount, "GetAccountDetailsByID"), "Accounts not found", fmt.Sprintf("ToAccountId ID : %v", req.ToAccountId))
 		// Return domain error for invalid account
-		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "Invalid account to perform transaction", "", errors.ErrAccountNotFound)
+		return req_res.TransactionAccResponse{}, errors.NewDomainError(corId, "Invalid receiver account to perform transaction", "", errors.ErrAccountNotFound)
 	}
 
 	if err != nil {
