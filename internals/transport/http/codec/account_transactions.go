@@ -46,6 +46,11 @@ func DecodeDoTransaction(ctx context.Context, req *http.Request) (request interf
 		return nil, errors.NewValidationError(corId, "Invalid request", string(debug.Stack()), errs, errors.ErrRequestInvalid)
 
 	}
+	
+	if requestData.Amount < 0 {
+		log.ErrorContext(ctx, fmt.Sprintf("%s.%s", logPrefixAccountTransaction, "DecodeDoTransaction"), fmt.Sprintf("Negative ammount to transfer"))
+		return nil, errors.NewDomainError(corId, "Transfer amount should be non negative value", string(debug.Stack()), errors.ErrNegativeTrxAmount)
+	}
 
 	return requestData, nil
 
