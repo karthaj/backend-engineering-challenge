@@ -22,6 +22,8 @@ This is a Go program that emulates a RESTful API for money transfers between acc
 ### Private API Request Flow with JWT Authentication Middleware
 ![go-arch-private-api-request-flow](https://user-images.githubusercontent.com/48028155/234178020-fb46f851-278c-4c55-9c4c-818ff91a7c16.png)
 
+[Postman Collection with examples - Link](https://app.getpostman.com/join-team?invite_code=3328a1003a191d886a27b9af9c96fdd7&target_code=c1ef287fe4da05a5e9365e73e6383fe9)
+
 ---
 
 ### features 
