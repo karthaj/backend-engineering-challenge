@@ -24,6 +24,9 @@ const (
 	// ErrTransactionFailed is an error code for failed transaction
 	ErrTransactionFailed = 100106
 
+	// ErrNegativeTrxAmount is an error code for negative transfer amount
+	ErrNegativeTrxAmount = 100107
+
 	// ErrRequestInvalid is an error code for invalid request
 	ErrRequestInvalid = 100101
 )
