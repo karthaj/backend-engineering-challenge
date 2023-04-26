@@ -22,8 +22,6 @@ This is a Go program that emulates a RESTful API for money transfers between acc
 ### Private API Request Flow with JWT Authentication Middleware
 ![go-arch-private-api-request-flow](https://user-images.githubusercontent.com/48028155/234178020-fb46f851-278c-4c55-9c4c-818ff91a7c16.png)
 
-## [Postman Collection with examples - Link](https://app.getpostman.com/join-team?invite_code=3328a1003a191d886a27b9af9c96fdd7&target_code=c1ef287fe4da05a5e9365e73e6383fe9)
-
 ---
 
 ### features 
@@ -34,7 +32,7 @@ This is a Go program that emulates a RESTful API for money transfers between acc
   5. Im memory DB - BadgerDB ( new to the library )
     
 
-# REST API example application
+
 ## Install
 
     go mod downlaod && go mod tidy
@@ -43,9 +41,11 @@ This is a Go program that emulates a RESTful API for money transfers between acc
 
     go run main.go 
 
-# REST API
+# REST API - [Postman Collection with examples](https://app.getpostman.com/join-team?invite_code=3328a1003a191d886a27b9af9c96fdd7&target_code=c1ef287fe4da05a5e9365e73e6383fe9)
+
 
 The REST API to the backend-engineering-challenge is given below. Tester may use the curl to execute the API calls.
+ 
 
 ## Ping
 #### Request - GET
