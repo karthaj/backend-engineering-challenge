@@ -45,6 +45,24 @@ This is a Go program that emulates a RESTful API for money transfers between acc
 
 The REST API to the backend-engineering-challenge is given below. Tester may use the curl to execute the API calls.
 
+## Ping
+#### Request - GET
+
+   `{ BASE-API }/v1.0/ping`
+
+    curl --location --request GET 'localhost:8085/v1.0/ping'
+
+#### Success Response - 200
+      {
+          "Data": {
+              "Status": "P I N G - Wed, 26 Apr 2023 11:11:44 +0530"
+          },
+          "Meta": {
+              "Code": 200,
+              "Message": "Success"
+          }
+      }
+
 ## Get Account by ID
 
 #### Request - GET
